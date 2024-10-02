@@ -1,13 +1,13 @@
-package com.example.helloinventory;
+package com.example.inventory;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class HelloInventoryApplication {
+public class InventoryApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(HelloInventoryApplication.class, args);
+		SpringApplication.run(InventoryApplication.class, args);
 	}
 
 }
