@@ -1,9 +1,11 @@
 package com.example.inventory.controller;
 
 import com.example.inventory.config.JsonConfig;
+import com.example.inventory.controller.consts.ErrorCodes;
 import com.example.inventory.exception.NotImplementedException;
 import com.example.inventory.service.InventoryService;
 import com.example.inventory.service.domain.Inventory;
+import com.example.inventory.test.assertion.Assertions;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -13,10 +15,11 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Import(JsonConfig.class)
@@ -43,10 +46,11 @@ class InventoryControllerTest {
             given(inventoryService.findByItemId(itemId))
                     .willReturn(null);
 
-            mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/inventory/{itemId}", itemId))
-                    .andExpectAll(status().isNotFound(),
-                            jsonPath("$.error.code").value(404),
-                            jsonPath("$.error.message").value("자산이 존재하지 않습니다"));
+            MvcResult mvcResult = mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/inventory/{itemId}", itemId))
+                    .andExpect(status().isNotFound())
+                    .andReturn();
+
+            Assertions.assertMvcErrorEquals(mvcResult, ErrorCodes.ITEM_NOT_FOUND);
         }
 
         @DisplayName("정상인 경우, 200 status와 결과를 반환한다")
@@ -56,10 +60,14 @@ class InventoryControllerTest {
             given(inventoryService.findByItemId(itemId))
                     .willReturn(inventory);
 
-            mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/inventory/{itemId}", itemId))
-                    .andExpectAll(status().isOk(),
-                            jsonPath("$.data.itemId").value(itemId),
-                            jsonPath("$.data.stock").value(stock));
+            MvcResult mvcResult = mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/inventory/{itemId}", itemId))
+                    .andExpect(status().isOk())
+                    .andReturn();
+
+            Assertions.asserMvcDataEquals(mvcResult, jsonNode -> {
+                assertThat(jsonNode.get("itemId").asText()).isEqualTo(itemId);
+                assertThat(jsonNode.get("stock").asLong()).isEqualTo(stock);
+            });
         }
     }
 
