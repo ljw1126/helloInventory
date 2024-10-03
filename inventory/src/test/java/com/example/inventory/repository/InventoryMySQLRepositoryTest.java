@@ -2,6 +2,7 @@ package com.example.inventory.repository;
 
 import com.example.inventory.config.JpaConfig;
 import com.example.inventory.repository.entity.InventoryEntity;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -17,11 +18,12 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@Disabled
 @Import(JpaConfig.class)
-@ActiveProfiles("h2-test")
+@ActiveProfiles("mysql-test")
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @DataJpaTest
-class InventoryJpaRepositoryTest {
+class InventoryMySQLRepositoryTest {
 
     @Autowired
     InventoryJpaRepository sut;
