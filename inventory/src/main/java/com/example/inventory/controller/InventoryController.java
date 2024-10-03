@@ -4,14 +4,17 @@ import com.example.inventory.common.controller.ApiResponse;
 import com.example.inventory.controller.consts.ErrorCodes;
 import com.example.inventory.controller.dto.DecreaseQuantityRequest;
 import com.example.inventory.controller.dto.InventoryResponse;
+import com.example.inventory.controller.dto.UpdateStockRequest;
 import com.example.inventory.controller.exception.CommonInventoryHttpException;
 import com.example.inventory.service.InventoryService;
 import com.example.inventory.service.domain.Inventory;
 import com.example.inventory.service.exception.InsufficientStockException;
 import com.example.inventory.service.exception.InvalidDecreaseQuantityException;
+import com.example.inventory.service.exception.InvalidStockException;
 import com.example.inventory.service.exception.ItemNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -50,6 +53,20 @@ public class InventoryController {
             throw new CommonInventoryHttpException(ErrorCodes.INSUFFICIENT_STOCK, HttpStatus.BAD_REQUEST);
         } catch (InvalidDecreaseQuantityException e) {
             throw new CommonInventoryHttpException(ErrorCodes.INVALID_DECREASE_QUANTITY, HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @PatchMapping("/{itemId}/stock")
+    ApiResponse<InventoryResponse> updateStock(@PathVariable("itemId") String itemId,
+                                               @RequestBody UpdateStockRequest request) {
+
+        try {
+            Inventory inventory = inventoryService.updateStock(itemId, request.stock());
+            return ApiResponse.ok(InventoryResponse.from(inventory));
+        } catch (ItemNotFoundException e) {
+            throw new CommonInventoryHttpException(ErrorCodes.ITEM_NOT_FOUND, HttpStatus.NOT_FOUND);
+        } catch (InvalidStockException e) {
+            throw new CommonInventoryHttpException(ErrorCodes.INVALID_STOCK, HttpStatus.BAD_REQUEST);
         }
     }
 }

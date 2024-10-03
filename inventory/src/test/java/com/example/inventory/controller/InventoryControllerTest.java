@@ -2,13 +2,14 @@ package com.example.inventory.controller;
 
 import com.example.inventory.config.JsonConfig;
 import com.example.inventory.controller.consts.ErrorCodes;
-import com.example.inventory.exception.NotImplementedException;
 import com.example.inventory.service.InventoryService;
 import com.example.inventory.service.domain.Inventory;
 import com.example.inventory.service.exception.InsufficientStockException;
 import com.example.inventory.service.exception.InvalidDecreaseQuantityException;
+import com.example.inventory.service.exception.InvalidStockException;
 import com.example.inventory.service.exception.ItemNotFoundException;
 import com.example.inventory.test.assertion.Assertions;
+import com.example.inventory.test.fixture.InventoryFixture;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -62,7 +63,7 @@ class InventoryControllerTest {
         @DisplayName("정상인 경우, 200 status와 결과를 반환한다")
         @Test
         void success() throws Exception {
-            final Inventory inventory = new Inventory(itemId, stock);
+            final Inventory inventory = InventoryFixture.sampleInventory(itemId, stock);
             given(inventoryService.findByItemId(itemId))
                     .willReturn(inventory);
 
@@ -132,7 +133,7 @@ class InventoryControllerTest {
         @DisplayName("정상인 경우, 200 status와 결과를 반환한다")
         @Test
         void success() throws Exception {
-            final Inventory inventory = new Inventory(itemId, stock);
+            final Inventory inventory = InventoryFixture.sampleInventory(itemId, stock);
             given(inventoryService.decreaseByItemId(itemId, quantity))
                     .willReturn(inventory);
 
@@ -152,22 +153,56 @@ class InventoryControllerTest {
     @DisplayName("재고 수정")
     @Nested
     class UpdateStock {
+        final String itemId = "1";
+        final Long stock = 100L;
+
         @DisplayName("자산(상품)이 존재하지 않을 경우, 404 status와 error를 반환한다")
         @Test
-        void test() {
-            throw new NotImplementedException();
+        void test() throws Exception {
+            given(inventoryService.updateStock(itemId, stock))
+                    .willThrow(ItemNotFoundException.class);
+
+            MvcResult mvcResult = mockMvc.perform(MockMvcRequestBuilders.patch("/api/v1/inventory/{itemId}/stock", itemId)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(Map.of("stock", stock)))
+                    ).andExpect(status().isNotFound())
+                    .andReturn();
+
+            Assertions.assertMvcErrorEquals(mvcResult, ErrorCodes.ITEM_NOT_FOUND);
         }
 
         @DisplayName("수정하려는 재고가 유효하지 않은 경우, 400 status와 error를 반환한다")
         @Test
-        void test2() {
-            throw new NotImplementedException();
+        void test2() throws Exception {
+            given(inventoryService.updateStock(itemId, stock))
+                    .willThrow(InvalidStockException.class);
+
+            MvcResult mvcResult = mockMvc.perform(MockMvcRequestBuilders.patch("/api/v1/inventory/{itemId}/stock", itemId)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(Map.of("stock", stock)))
+                    ).andExpect(status().isBadRequest())
+                    .andReturn();
+
+            Assertions.assertMvcErrorEquals(mvcResult, ErrorCodes.INVALID_STOCK);
         }
 
         @DisplayName("정상인 경우, 200 status와 결과를 반환한다")
         @Test
-        void success() {
-            throw new NotImplementedException();
+        void success() throws Exception {
+            final Inventory inventory = InventoryFixture.sampleInventory(itemId, stock);
+            given(inventoryService.updateStock(itemId, stock))
+                    .willReturn(inventory);
+
+            MvcResult mvcResult = mockMvc.perform(MockMvcRequestBuilders.patch("/api/v1/inventory/{itemId}/stock", itemId)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(Map.of("stock", stock)))
+                    ).andExpect(status().isOk())
+                    .andReturn();
+
+            Assertions.asserMvcDataEquals(mvcResult, jsonNode -> {
+                assertThat(jsonNode.get("itemId").asText()).isEqualTo(itemId);
+                assertThat(jsonNode.get("stock").asLong()).isEqualTo(stock);
+            });
         }
     }
 }
