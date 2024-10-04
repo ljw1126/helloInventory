@@ -10,7 +10,7 @@ dependencies {
 	implementation(Spring.boot.data.jpa)
 
 	testImplementation("com.h2database:h2")
-	testImplementation("mysql:mysql-connector-java:_")
+	implementation("mysql:mysql-connector-java:_")
 
 	// testcontainer
 	testImplementation(platform("org.testcontainers:testcontainers-bom:_"))
