@@ -10,7 +10,9 @@ import com.example.inventory.service.exception.ItemNotFoundException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+@Transactional
 @Service
 public class InventoryService {
     private final InventoryJpaRepository inventoryJpaRepository;
@@ -19,6 +21,7 @@ public class InventoryService {
         this.inventoryJpaRepository = inventoryJpaRepository;
     }
 
+    @Transactional(readOnly = true)
     public @Nullable Inventory findByItemId(@NotNull String itemId) {
         return inventoryJpaRepository.findByItemId(itemId)
                 .map(this::mapToDomain)
