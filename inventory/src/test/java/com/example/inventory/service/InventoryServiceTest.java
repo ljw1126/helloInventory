@@ -1,11 +1,11 @@
 package com.example.inventory.service;
 
-import com.example.inventory.repository.InventoryJpaRepositoryStub;
 import com.example.inventory.service.domain.Inventory;
 import com.example.inventory.service.exception.InsufficientStockException;
 import com.example.inventory.service.exception.InvalidDecreaseQuantityException;
 import com.example.inventory.service.exception.InvalidStockException;
 import com.example.inventory.service.exception.ItemNotFoundException;
+import com.example.inventory.service.persistence.InventoryPersistenceAdapterStub;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -28,7 +28,7 @@ class InventoryServiceTest {
     InventoryService sut;
 
     @Spy
-    InventoryJpaRepositoryStub inventoryJpaRepository;
+    InventoryPersistenceAdapterStub inventoryAdapter;
 
     @Nested
     class FindByItemId {
@@ -37,7 +37,7 @@ class InventoryServiceTest {
 
         @BeforeEach
         void setUp() {
-            inventoryJpaRepository.addInventoryEntity(existingItemId, stock);
+            inventoryAdapter.addInventory(existingItemId, stock);
         }
 
         @DisplayName("itemId를 갖는 entity를 조회하지 못하면, null을 반환한다")
@@ -71,7 +71,7 @@ class InventoryServiceTest {
 
         @BeforeEach
         void setUp() {
-            inventoryJpaRepository.addInventoryEntity(existingItemId, stock);
+            inventoryAdapter.addInventory(existingItemId, stock);
         }
 
         @DisplayName("수량 quantity가 음수라면, 예외를 던진다")
@@ -110,14 +110,14 @@ class InventoryServiceTest {
         void test4() {
             final Long quantity = 10L;
 
-            doReturn(0).when(inventoryJpaRepository)
+            doReturn(null).when(inventoryAdapter)
                     .decreaseStock(existingItemId, quantity);
 
             assertThatThrownBy(() -> {
                 sut.decreaseByItemId(existingItemId, quantity);
             }).isInstanceOf(ItemNotFoundException.class);
 
-            verify(inventoryJpaRepository, times(1)).decreaseStock(existingItemId, quantity);
+            verify(inventoryAdapter, times(1)).decreaseStock(existingItemId, quantity);
         }
 
         @DisplayName("itemId를 갖는 entity가 조회되면, stock을 차감하고 inventory를 반환한다")
@@ -140,7 +140,7 @@ class InventoryServiceTest {
 
         @BeforeEach
         void setUp() {
-            inventoryJpaRepository.addInventoryEntity(existingItemId, stock);
+            inventoryAdapter.addInventory(existingItemId, stock);
         }
 
         @DisplayName("수정할 stock이 유효하지 않다면, 예외를 던진다")
