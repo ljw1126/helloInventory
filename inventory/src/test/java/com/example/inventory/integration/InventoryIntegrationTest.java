@@ -1,17 +1,25 @@
 package com.example.inventory.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
+import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.util.Map;
 
@@ -24,6 +32,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@Testcontainers
 @Transactional
 @ActiveProfiles("integration-test")
 @Sql(scripts = {"classpath:schema.sql", "classpath:data.sql"}, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_CLASS)
@@ -35,6 +44,15 @@ public class InventoryIntegrationTest {
     private final String existingItemId = "1";
     private final String nonExistingItemId = "2";
     private final Long stock = 100L;
+
+    @Container
+    private static final GenericContainer<?> redisContainer = new GenericContainer<>("redis:7.2")
+            .withExposedPorts(6379);
+
+    @DynamicPropertySource
+    static void setDatasourceProperties(DynamicPropertyRegistry registry) {
+        registry.add("spring.data.redis.port", () -> redisContainer.getMappedPort(6379));
+    }
 
     @Autowired
     private MockMvc mockMvc;
@@ -55,6 +73,14 @@ public class InventoryIntegrationTest {
     @Test
     void test2() throws Exception {
         successGetStock(existingItemId, stock);
+    }
+
+    @Autowired
+    private StringRedisTemplate redisTemplate;
+
+    @BeforeEach
+    void setUp() {
+        redisTemplate.opsForValue().set("inventory:" + existingItemId, stock.toString());
     }
 
     @DisplayName("재고 차감 실패")
@@ -178,5 +204,10 @@ public class InventoryIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.itemId").value(itemId))
                 .andExpect(jsonPath("$.data.stock").value(stock));
+    }
+
+    @AfterEach
+    void tearDown() {
+        redisTemplate.getConnectionFactory().getConnection().serverCommands().flushAll();
     }
 }
