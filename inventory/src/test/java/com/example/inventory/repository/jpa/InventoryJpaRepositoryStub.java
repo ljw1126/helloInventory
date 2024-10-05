@@ -1,6 +1,7 @@
 package com.example.inventory.repository;
 
 import com.example.inventory.repository.entity.InventoryEntity;
+import com.example.inventory.repository.jpa.InventoryJpaRepository;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;

@@ -1,4 +1,4 @@
-package com.example.inventory.repository;
+package com.example.inventory.repository.jpa;
 
 import com.example.inventory.repository.entity.InventoryEntity;
 import org.jetbrains.annotations.NotNull;
