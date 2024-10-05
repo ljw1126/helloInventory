@@ -6,7 +6,7 @@ import org.jetbrains.annotations.Nullable;
 public interface InventoryRedisRepository {
     @NotNull
     default String key(@NotNull String itemId) {
-        return "inventor:" + itemId;
+        return "inventory:" + itemId;
     }
 
     @Nullable Long getStock(@NotNull String itemId);
