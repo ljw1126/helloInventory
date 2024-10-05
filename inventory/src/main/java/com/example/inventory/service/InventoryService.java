@@ -1,6 +1,6 @@
 package com.example.inventory.service;
 
-import com.example.inventory.repository.entity.InventoryEntity;
+import com.example.inventory.repository.jpa.entity.InventoryEntity;
 import com.example.inventory.service.domain.Inventory;
 import com.example.inventory.service.exception.InsufficientStockException;
 import com.example.inventory.service.exception.InvalidDecreaseQuantityException;

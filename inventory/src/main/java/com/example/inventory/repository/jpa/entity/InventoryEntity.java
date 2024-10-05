@@ -1,4 +1,4 @@
-package com.example.inventory.repository.entity;
+package com.example.inventory.repository.jpa.entity;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
