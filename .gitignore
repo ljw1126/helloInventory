@@ -37,3 +37,5 @@ out/
 .vscode/
 
 inventory/db_data/
+utils/find-duplicate/result.txt
+jmeter.log
