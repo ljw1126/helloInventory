@@ -1,6 +1,7 @@
 package com.example.inventory.repository;
 
 import com.example.inventory.repository.jpa.InventoryJpaRepositoryStub;
+import com.example.inventory.repository.redis.InventoryRedisRepositoryStub;
 import com.example.inventory.service.domain.Inventory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -22,6 +23,9 @@ class InventoryPersistenceAdapterImplTest {
     @Spy
     InventoryJpaRepositoryStub inventoryJpaRepositoryStub;
 
+    @Spy
+    InventoryRedisRepositoryStub inventoryRedisRepositoryStub;
+
     @Nested
     class FindByItemId { // query method
         final String existingItemId = "1";
@@ -31,6 +35,7 @@ class InventoryPersistenceAdapterImplTest {
         @BeforeEach
         void setUp() {
             inventoryJpaRepositoryStub.addInventoryEntity(existingItemId, stock);
+            inventoryRedisRepositoryStub.addStock(existingItemId, stock);
         }
 
         @DisplayName("itemId를 갖는 entity가 없다면, null를 반환한다")
@@ -63,6 +68,7 @@ class InventoryPersistenceAdapterImplTest {
         @BeforeEach
         void setUp() {
             inventoryJpaRepositoryStub.addInventoryEntity(existingItemId, stock);
+            inventoryRedisRepositoryStub.addStock(existingItemId, stock);
         }
 
         @DisplayName("itemId를 갖는 entity가 없다면, null을 반환한다")
@@ -94,6 +100,7 @@ class InventoryPersistenceAdapterImplTest {
         @BeforeEach
         void setUp() {
             inventoryJpaRepositoryStub.addInventoryEntity(existingItemId, stock);
+            inventoryRedisRepositoryStub.addStock(existingItemId, stock);
         }
 
         @DisplayName("itemId를 갖는 entity가 없다면, entity를 추가하고 추가된 inventory를 반환한다")
