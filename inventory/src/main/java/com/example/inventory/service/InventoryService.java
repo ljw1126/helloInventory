@@ -2,6 +2,9 @@ package com.example.inventory.service;
 
 import com.example.inventory.repository.jpa.entity.InventoryEntity;
 import com.example.inventory.service.domain.Inventory;
+import com.example.inventory.service.event.InventoryDecreasedEvent;
+import com.example.inventory.service.event.InventoryEventPublisher;
+import com.example.inventory.service.event.InventoryUpdatedEvent;
 import com.example.inventory.service.exception.InsufficientStockException;
 import com.example.inventory.service.exception.InvalidDecreaseQuantityException;
 import com.example.inventory.service.exception.InvalidStockException;
@@ -16,9 +19,11 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class InventoryService {
     private final InventoryPersistenceAdapter inventoryPersistenceAdapter;
+    private final InventoryEventPublisher inventoryEventPublisher;
 
-    public InventoryService(InventoryPersistenceAdapter inventoryPersistenceAdapter) {
+    public InventoryService(InventoryPersistenceAdapter inventoryPersistenceAdapter, InventoryEventPublisher inventoryEventPublisher) {
         this.inventoryPersistenceAdapter = inventoryPersistenceAdapter;
+        this.inventoryEventPublisher = inventoryEventPublisher;
     }
 
     @Transactional(readOnly = true)
@@ -49,6 +54,9 @@ public class InventoryService {
             throw new ItemNotFoundException();
         }
 
+        final InventoryDecreasedEvent event = new InventoryDecreasedEvent(itemId, quantity, updatedInventory.getStock());
+        inventoryEventPublisher.publish(event);
+
         return updatedInventory;
     }
 
@@ -63,6 +71,10 @@ public class InventoryService {
         }
 
         inventory.setStock(newStock);
-        return inventoryPersistenceAdapter.save(inventory);
+        Inventory updatedInventory = inventoryPersistenceAdapter.save(inventory);
+
+        final InventoryUpdatedEvent event = new InventoryUpdatedEvent(itemId, updatedInventory.getStock());
+        inventoryEventPublisher.publish(event);
+        return updatedInventory;
     }
 }

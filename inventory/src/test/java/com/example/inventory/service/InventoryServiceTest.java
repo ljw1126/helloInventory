@@ -1,6 +1,9 @@
 package com.example.inventory.service;
 
 import com.example.inventory.service.domain.Inventory;
+import com.example.inventory.service.event.InventoryDecreasedEvent;
+import com.example.inventory.service.event.InventoryEventPublisher;
+import com.example.inventory.service.event.InventoryUpdatedEvent;
 import com.example.inventory.service.exception.InsufficientStockException;
 import com.example.inventory.service.exception.InvalidDecreaseQuantityException;
 import com.example.inventory.service.exception.InvalidStockException;
@@ -12,6 +15,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -29,6 +33,9 @@ class InventoryServiceTest {
 
     @Spy
     InventoryPersistenceAdapterStub inventoryAdapter;
+
+    @Mock
+    InventoryEventPublisher inventoryEventPublisher;
 
     @Nested
     class FindByItemId {
@@ -130,6 +137,9 @@ class InventoryServiceTest {
             assertThat(result).isNotNull()
                     .extracting("itemId", "stock")
                     .containsExactly(existingItemId, (stock - quantity));
+
+            final InventoryDecreasedEvent event = new InventoryDecreasedEvent(existingItemId, quantity, stock - quantity);
+            verify(inventoryEventPublisher).publish(event);
         }
     }
 
@@ -174,6 +184,9 @@ class InventoryServiceTest {
             assertThat(result).isNotNull()
                     .extracting("itemId", "stock")
                     .containsExactly(existingItemId, newStock);
+
+            final InventoryUpdatedEvent event = new InventoryUpdatedEvent(existingItemId, newStock);
+            verify(inventoryEventPublisher).publish(event);
         }
     }
 }
