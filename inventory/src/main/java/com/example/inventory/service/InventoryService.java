@@ -31,6 +31,7 @@ public class InventoryService {
         return inventoryPersistenceAdapter.findByItemId(itemId);
     }
 
+    @Deprecated
     private Inventory mapToDomain(InventoryEntity entity) {
         return new Inventory(entity.getItemId(), entity.getStock());
     }
@@ -55,8 +56,11 @@ public class InventoryService {
         }
 
         final InventoryDecreasedEvent event = new InventoryDecreasedEvent(itemId, quantity, updatedInventory.getStock());
-        inventoryEventPublisher.publish(event);
-
+        try {
+            inventoryEventPublisher.publish(event);
+        } catch (Exception e) {
+            // do nothing
+        }
         return updatedInventory;
     }
 
@@ -74,7 +78,11 @@ public class InventoryService {
         Inventory updatedInventory = inventoryPersistenceAdapter.save(inventory);
 
         final InventoryUpdatedEvent event = new InventoryUpdatedEvent(itemId, updatedInventory.getStock());
-        inventoryEventPublisher.publish(event);
+        try {
+            inventoryEventPublisher.publish(event);
+        } catch (Exception e) {
+            // do nothing
+        }
         return updatedInventory;
     }
 }

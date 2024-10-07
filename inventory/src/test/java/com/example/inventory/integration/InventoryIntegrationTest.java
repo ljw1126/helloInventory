@@ -1,5 +1,6 @@
 package com.example.inventory.integration;
 
+import com.example.inventory.test.assertion.Assertions;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -9,8 +10,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cloud.stream.binder.test.OutputDestination;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.MediaType;
+import org.springframework.messaging.Message;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -59,6 +62,9 @@ public class InventoryIntegrationTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private OutputDestination outputDestination;
 
     @DisplayName("재고 조회 실패")
     @Test
@@ -123,6 +129,8 @@ public class InventoryIntegrationTest {
         successGetStock(existingItemId, stock - quantity);
 
         //4. 재고 차감 이벤트 1번 발행된 것을 확인한다.
+        final Message<byte[]> result = outputDestination.receive(1000, "inventory-out-0");
+        Assertions.assertDecreasedEventEquals(result, existingItemId, quantity, stock - quantity);
     }
 
     @DisplayName("재고 수정 실패")
@@ -163,6 +171,9 @@ public class InventoryIntegrationTest {
 
         //3. 재고를 조회하고 1000개인 것을 확인한다.
         successGetStock(existingItemId, newStock);
+
+        final Message<byte[]> result = outputDestination.receive(1000, "inventory-out-0");
+        Assertions.assertUpdatedEventEquals(result, existingItemId, newStock);
     }
 
     @DisplayName("재고 차감, 수정 종합")
@@ -172,18 +183,18 @@ public class InventoryIntegrationTest {
         successGetStock(existingItemId, stock);
 
         //2. 재고 10개 차감을 7번 반복하고 성공한다.
-        final Long quantity = 10L;
+        final Long decreaseQuantity = 10L;
         for (int i = 1; i <= 7; i++) {
             mockMvc.perform(
                             post("/api/v1/inventory/{itemId}/decrease", existingItemId)
                                     .contentType(MediaType.APPLICATION_JSON)
-                                    .content(objectMapper.writeValueAsString(Map.of("quantity", quantity)))
+                                    .content(objectMapper.writeValueAsString(Map.of("quantity", decreaseQuantity)))
                     ).andExpect(status().isOk())
                     .andExpect(jsonPath("$.data.itemId").value(existingItemId))
-                    .andExpect(jsonPath("$.data.stock").value(stock - (i * quantity)));
+                    .andExpect(jsonPath("$.data.stock").value(stock - (i * decreaseQuantity)));
         }
         //3. 재고를 조회하고 30개인 것을 확인한다.
-        successGetStock(existingItemId, stock - (7 * quantity));
+        successGetStock(existingItemId, stock - (7 * decreaseQuantity));
 
         //4. 재고를 500개로 수정하고 성공한다.
         final Long newStock = 500L;
@@ -197,6 +208,17 @@ public class InventoryIntegrationTest {
 
         //5. 재고를 조회하고 500개인 것을 확인한다.
         successGetStock(existingItemId, newStock);
+
+        // 6. 재고 차감 이벤트 7번, 재고 수정 이벤트 1번 발행된 것을 확인한다.
+        Long prevStock = 100L;
+        for (int i = 0; i < 7; i++) {
+            prevStock -= decreaseQuantity;
+            final Message<byte[]> result = outputDestination.receive(1000, "inventory-out-0");
+            Assertions.assertDecreasedEventEquals(result, existingItemId, decreaseQuantity, prevStock);
+        }
+
+        final Message<byte[]> result = outputDestination.receive(1000, "inventory-out-0");
+        Assertions.assertUpdatedEventEquals(result, existingItemId, newStock);
     }
 
     private void successGetStock(String itemId, Long stock) throws Exception {
