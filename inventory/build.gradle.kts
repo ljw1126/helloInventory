@@ -13,6 +13,7 @@ dependencies {
 	implementation(Spring.boot.data.jpa)
 	implementation(Spring.boot.data.redis)
 	implementation(Spring.cloud.stream.stream)
+	implementation(Spring.cloud.stream.binderKafka)
 
 	testImplementation("com.h2database:h2")
 	implementation("mysql:mysql-connector-java:_")
@@ -22,12 +23,13 @@ dependencies {
 	testImplementation("org.testcontainers:testcontainers")
 	testImplementation("org.testcontainers:junit-jupiter")
 	testImplementation("org.testcontainers:mysql")
+	testImplementation("org.testcontainers:kafka")
 
 	// archunit
 	testImplementation("com.tngtech.archunit:archunit-junit5:_")
 
-	// spring-cloud-stream
-	testImplementation("org.springframework.cloud:spring-cloud-stream-test-binder")
+	// kafka
+	testImplementation("org.springframework.kafka:spring-kafka-test")
 }
 
 dependencyManagement {
