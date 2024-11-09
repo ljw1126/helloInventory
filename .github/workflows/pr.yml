@@ -24,6 +24,8 @@ jobs:
           cache: gradle  # use ~/.gradle/cache
       - name: Print env
         run: printenv
-      - name : Run test
+      - name : Run test and jacoco
         run: |
-          ./gradlew -p "inventory" test
+          ./gradlew -p "inventory" test jacocoTestReport
+      - run: ls -al inventory/build/reports/jacoco/test
+
