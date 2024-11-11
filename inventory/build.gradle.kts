@@ -3,6 +3,7 @@ plugins {
 	id("custom.test-conventions")
 	id("custom.spring-conventions")
 	id("custom.jacoco-conventions")
+	id("custom.sonar-conventions")
 }
 
 dependencies {
@@ -36,5 +37,16 @@ dependencies {
 dependencyManagement {
 	imports {
 		mavenBom("org.springframework.cloud:spring-cloud-dependencies:2023.0.1")
+	}
+}
+
+sonar {
+	properties {
+		property("sonar.projectKey", "ljw1126_helloInventory")
+		property("sonar.projectName", "ljw1126_helloInventory")
+		property("sonar.sources", "src/main/java")
+		property("sonar.tests", "src/test/java")
+		property("sonar.coverage.jacoco.xmlReportPaths", "build/reports/jacoco/test/jacocoTestReport.xml")
+		property("sonar.junit.reportPaths", "build/test-results/test")
 	}
 }
