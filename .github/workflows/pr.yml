@@ -24,8 +24,12 @@ jobs:
           cache: gradle  # use ~/.gradle/cache
       - name: Print env
         run: printenv
-      - name : Run test and jacoco
+      - name : Run test and jacoco, sonar
         run: |
           ./gradlew -p "inventory" test jacocoTestReport
-      - run: ls -al inventory/build/reports/jacoco/test
-
+      - name: Run sonar
+        if: ${{ !env.ACT }}
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          ./gradlew -p "inventory" sonar
