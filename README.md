@@ -1,8 +1,12 @@
+<div style="display: flex; gap: 10px;">
+
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=ljw1126_helloInventory&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=ljw1126_helloInventory)
 
 [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=ljw1126_helloInventory&metric=coverage)](https://sonarcloud.io/summary/new_code?id=ljw1126_helloInventory)
 
 [![Duplicated Lines (%)](https://sonarcloud.io/api/project_badges/measure?project=ljw1126_helloInventory&metric=duplicated_lines_density)](https://sonarcloud.io/summary/new_code?id=ljw1126_helloInventory)
+
+</div>
 
 # act
 
@@ -25,11 +29,12 @@ act -P ubuntu-22.04=catthehacker/ubuntu:act-22.04 {pull_request | push}
 ```
 
 
+
 ---
-## 
-github action 
+# reference.
+**github action**
 - https://docs.github.com/ko/actions
 - https://docs.github.com/ko/actions/use-cases-and-examples/building-and-testing/building-and-testing-java-with-gradle
 
-Jacoco
--https://www.jacoco.org/jacoco/
+**Jacoco**
+- https://www.jacoco.org/jacoco/
